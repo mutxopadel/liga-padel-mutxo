@@ -10,7 +10,7 @@ const {
   enlaceJugador,
   construirContenidoPublicado,
   esLigaPrincipal,
-} = require('../publicacion.js');
+} = require('../js/publicacion.js');
 
 const URL_BASE = 'https://mutxopadel.github.io/liga-padel-mutxo/';
 

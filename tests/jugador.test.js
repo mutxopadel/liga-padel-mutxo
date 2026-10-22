@@ -13,7 +13,7 @@ const {
   quitarLiga,
   sanearListaLigas,
   rutaDescargaLiga,
-} = require('../jugador.js');
+} = require('../js/jugador.js');
 
 test('esIdLigaValido acepta minúsculas y dígitos y rechaza el resto', () => {
   assert.ok(esIdLigaValido('aaa111'));
