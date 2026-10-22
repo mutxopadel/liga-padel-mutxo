@@ -21,20 +21,28 @@ Los jugadores no necesitan la app de gestión: tienen la suya, de solo lectura, 
 
 [`https://mutxopadel.github.io/liga-padel-mutxo/jugador/`](https://mutxopadel.github.io/liga-padel-mutxo/jugador/)
 
-Esa es la URL que hay que pasarles. Desde ella el navegador ofrece **Añadir a
-pantalla de inicio** / **Instalar** igual que la app de gestión, y queda como una
-app aparte ("Liga Mutxo Padel") con su propio ámbito de instalación (distinto
-del de la app de gestión, así que las dos se pueden instalar a la vez sin que
-Android confunda una con otra). El enlace antiguo,
-`https://mutxopadel.github.io/liga-padel-mutxo/jugador.html`, sigue
-funcionando: redirige automáticamente a `jugador/`.
+Desde ella el navegador ofrece **Añadir a pantalla de inicio** / **Instalar**
+igual que la app de gestión, y queda como una app aparte ("Liga Mutxo Padel")
+con su propio ámbito de instalación (distinto del de la app de gestión, así que
+las dos se pueden instalar a la vez sin que Android confunda una con otra). El
+enlace antiguo, `https://mutxopadel.github.io/liga-padel-mutxo/jugador.html`,
+sigue funcionando: redirige automáticamente a `jugador/`.
+
+**Varias ligas, cada grupo la suya.** Cada liga publicada tiene su propio
+enlace, `https://mutxopadel.github.io/liga-padel-mutxo/jugador/?liga=<id>`, que
+la app de gestión muestra al publicar. Quien abre ese enlace ve esa liga y la
+app la recuerda; si recibe enlaces de varias ligas, aparece un selector bajo el
+título para cambiar entre ellas. Quien abre la app sin enlace (por ejemplo, una
+app ya instalada antes de existir los enlaces) ve la **liga principal**, la que
+el administrador haya marcado como tal al publicar. Si una liga se retira, su
+enlace avisa de que ya no está publicada.
 
 Qué ven: solo las pestañas **Jornadas** y **Clasificación**, con la ficha de cada
-jugador y los botones **Sacar imagen**. No hay pestaña Jugadores, ni selector de
-ligas, ni botones de generar/exportar/importar/compartir, y los sets salen
-deshabilitados: no pueden tocar nada.
+jugador y los botones **Sacar imagen**. No hay pestaña Jugadores ni botones de
+generar/exportar/importar/compartir, y los sets salen deshabilitados: no pueden
+tocar nada.
 
-**Se actualiza sola**: cada vez que se abre, descarga `liga-oficial.json` del
+**Se actualiza sola**: cada vez que se abre, descarga la liga publicada del
 propio sitio, así que en cuanto el administrador publica una versión nueva, todos
 la ven al abrir la app (no hay que reinstalar nada). Si en ese momento no hay red,
 muestra la última liga que se descargó; si no se ha llegado a descargar ninguna,
@@ -42,20 +50,50 @@ avisa de que hace falta internet. Bajo el título aparece la línea
 "Actualizado: …" con la fecha de la última publicación, junto al botón
 **Actualizar**, que fuerza esa misma descarga al momento sin recargar la página.
 
+> **Ojo: el repo es público.** Las ligas publicadas son ficheros JSON del repo
+> (`ligas/<id>.json` y `liga-oficial.json`) y cualquiera puede leerlos, tenga o
+> no el enlace. El enlace por liga sirve para que cada grupo vea solo la suya,
+> no para mantenerla en secreto: no publiques nada que no pueda ver cualquiera.
+
 ### Publicar resultados (admin)
 
-En la parte superior de la pestaña **Jornadas** de la app de gestión,
-el botón **Publicar resultados** sube la liga activa como `liga-oficial.json`
-a la raíz del repo — el "tablón oficial" que `jugador.html` descarga. El
-contenido es exactamente el del export (`girls`, `boys`, `jornadas`,
-`liveGenerated`) más un campo `publicadoEl` con la fecha y hora (ISO) de la
-publicación, que alimenta la línea "Actualizado: …" de la app de jugadores.
+En la parte superior de la pestaña **Jornadas** de la app de gestión están los
+botones **Publicar resultados** y **Retirar publicación**. Los dos actúan sobre
+la liga activa.
 
-La primera vez que lo pulses (o si el token guardado deja de servir) te pide
-un **token de acceso personal de GitHub**, que se guarda solo en este
-dispositivo — en el `localStorage` del navegador, nunca en el repo ni en el
-código — y es el que usa la app para subir el archivo en tu nombre. Para
-crear uno:
+**Publicar resultados** abre un aviso con la casilla **«Publicar también como
+liga principal (la que ven los jugadores sin enlace)»**. La casilla sale marcada
+solo si esa liga ya es la principal, para que republicarla no le quite ese papel
+por descuido. Al confirmar:
+
+- Se sube la liga como `ligas/<id>.json` (el `<id>` es el identificador interno
+  de la liga en la app de gestión).
+- Si la casilla está marcada, se sube además como `liga-oficial.json`, que pasa
+  a ser la liga principal. Si no, la principal sigue siendo la que era.
+- El contenido es el del export (`girls`, `boys`, `jornadas`, `liveGenerated`)
+  más `publicadoEl` (fecha y hora ISO, que alimenta la línea "Actualizado: …"),
+  `ligaId` y `nombre` (el nombre de la liga en la app de gestión).
+- Al terminar se muestra el **enlace de jugador** de esa liga con un botón
+  **Copiar enlace**; si el navegador no deja copiar, el enlace queda a la vista
+  para copiarlo a mano. Es el enlace que hay que pasar a los jugadores de esa
+  liga. Los cambios tardan alrededor de un minuto en verse.
+- Si la liga se sube pero falla la segunda subida (la de principal), el aviso
+  dice que la liga quedó publicada en su enlace pero no como principal.
+
+**Retirar publicación** borra `ligas/<id>.json` tras confirmar, y el enlace de
+esa liga deja de funcionar. La liga principal no se puede retirar: los
+jugadores sin enlace se quedarían sin liga. Para retirarla, publica antes otra
+liga marcando «principal» y después retira la anterior. Si la liga no estaba
+publicada, la app lo dice y no hace nada.
+
+Mientras una publicación o retirada está en curso, los dos botones quedan
+deshabilitados.
+
+La primera vez que pulses cualquiera de los dos (o si el token guardado deja de
+servir) te pide un **token de acceso personal de GitHub**, que se guarda solo
+en este dispositivo — en el `localStorage` del navegador, nunca en el repo ni
+en el código — y es el que usa la app para subir y borrar los archivos en tu
+nombre. Para crear uno:
 
 1. En GitHub: **Settings → Developer settings → Personal access tokens →
    Fine-grained tokens → Generate new token**.
@@ -68,13 +106,9 @@ crear uno:
 
 Ese token es revocable en cualquier momento desde GitHub (misma pantalla,
 **Personal access tokens → Fine-grained tokens**) sin que afecte a nada más
-de tu cuenta, y solo puede tocar el contenido de este repo.
-
-Al pulsar Publicar, tras confirmar, el botón pasa a "Publicando…" y termina
-en "Publicado ✓ (visible en ~1 min)" si todo va bien. Un minuto después
-`jugador.html` ya sirve los resultados nuevos. Si el token es inválido o ha
-caducado, la app lo borra y avisa para que pegues uno nuevo la próxima vez
-que pulses Publicar; sin conexión, avisa de que no se ha podido publicar.
+de tu cuenta, y solo puede tocar el contenido de este repo. Si es inválido o ha
+caducado, la app lo borra y avisa para que pegues uno nuevo la próxima vez;
+sin conexión, avisa de que no se ha podido completar la operación.
 
 ## Cómo generar la liga
 

@@ -1,23 +1,122 @@
 'use strict';
 
-// Arranque y carga de la app de jugador (liga-oficial.json, modo consulta). Va aparte de app.js, que superaba el límite de tamaño.
+/* App de jugador (`jugador/index.html`): misma app que el admin pero en modo
+   consulta desde el primer instante. En vez de leer la liga de localStorage,
+   descarga la que el admin ha publicado: `ligas/<id>.json` si el jugador
+   llegó con un enlace `?liga=<id>`, o `liga-oficial.json` (la principal) si
+   no tiene ninguna guardada.
 
-/* ============================================================
-   APP DE JUGADOR (`jugador.html`)
-
-   Misma app, misma lógica: `jugador.html` carga este mismo `app.js` con
-   `<body data-pagina="jugador">` y lo único que cambia es el arranque —
-   modo consulta desde el primer instante (todas las salvaguardas de la
-   Fase 4) y, en vez de leer localStorage, se descarga la liga que el admin
-   ha publicado en `liga-oficial.json` dentro del propio sitio.
-
-   Aquí NO se toca en ningún momento la clave `padel-liga-mutxo-v1`: no se
-   llama a cargarEstado() y guardarEstado() está cortado por modoConsulta,
-   así que las ligas del admin (si este navegador es también el suyo) quedan
-   intactas byte a byte.
-   ============================================================ */
+   Aquí NO se toca la clave `padel-liga-mutxo-v1`: no se llama a
+   cargarEstado() y guardarEstado() está cortado por modoConsulta, así que las
+   ligas del admin (si este navegador es también el suyo) quedan intactas.
+   Las claves propias del jugador son las dos de abajo. */
 
 const ARCHIVO_LIGA_OFICIAL = '../liga-oficial.json';
+const CLAVE_LIGAS_JUGADOR = 'padel-liga-mutxo-jugador-ligas';
+const CLAVE_ACTIVA_JUGADOR = 'padel-liga-mutxo-jugador-activa';
+// Mismo patrón que valida el admin al publicar: el id acaba en una ruta, así
+// que nada de barras ni puntos (evita `?liga=../x`). El guion, por los ids
+// `liga0-xxxxxx` de las ligas antiguas migradas.
+const PATRON_ID_LIGA = /^[a-z0-9-]{1,30}$/;
+
+/* ---------- Funciones puras (probadas con node --test) ---------- */
+
+// Indica si `id` puede usarse como id de liga (y por tanto en una ruta).
+function esIdLigaValido(id) {
+  return typeof id === 'string' && PATRON_ID_LIGA.test(id);
+}
+
+// Lee `?liga=` de un URLSearchParams o de un string de query; devuelve el id
+// solo si es válido, para que un enlace manipulado se ignore sin más.
+function leerIdLigaDeUrl(busqueda) {
+  const params = typeof busqueda === 'string' ? new URLSearchParams(busqueda) : busqueda;
+  if (!params || typeof params.get !== 'function') return null;
+  const id = params.get('liga');
+  return esIdLigaValido(id) ? id : null;
+}
+
+// Añade la liga a la lista sin duplicar; si ya estaba, se respeta el nombre
+// guardado (el real, descargado antes). Devuelve una lista nueva.
+function anadirLiga(lista, id, nombre) {
+  if (lista.some((liga) => liga.id === id)) return lista.slice();
+  return [...lista, { id, nombre: nombre || id }];
+}
+
+// Devuelve una lista nueva con el nombre actualizado (si el nombre es útil).
+function renombrarLiga(lista, id, nombre) {
+  if (typeof nombre !== 'string' || !nombre.trim()) return lista.slice();
+  return lista.map((liga) => (liga.id === id ? { id, nombre: nombre.trim() } : liga));
+}
+
+// Devuelve una lista nueva sin la liga indicada.
+function quitarLiga(lista, id) {
+  return lista.filter((liga) => liga.id !== id);
+}
+
+// Descarta entradas corruptas de lo leído de localStorage (puede haberlo
+// editado cualquiera) y los ids repetidos.
+function sanearListaLigas(bruta) {
+  if (!Array.isArray(bruta)) return [];
+  return bruta.reduce((lista, entrada) => {
+    if (!entrada || !esIdLigaValido(entrada.id)) return lista;
+    const nombre = typeof entrada.nombre === 'string' ? entrada.nombre : entrada.id;
+    return anadirLiga(lista, entrada.id, nombre);
+  }, []);
+}
+
+// Ruta a descargar: la liga activa si la hay; si no, la principal.
+function rutaDescargaLiga(idActiva) {
+  return esIdLigaValido(idActiva) ? `../ligas/${idActiva}.json` : ARCHIVO_LIGA_OFICIAL;
+}
+
+/* ---------- Almacenamiento (todo en try/catch: modo privado, cuota…) ---------- */
+
+function leerLigasGuardadas() {
+  try {
+    return sanearListaLigas(JSON.parse(localStorage.getItem(CLAVE_LIGAS_JUGADOR)));
+  } catch (err) {
+    console.warn('No se han podido leer las ligas guardadas.', err);
+    return [];
+  }
+}
+
+function guardarLigasGuardadas(lista) {
+  try {
+    localStorage.setItem(CLAVE_LIGAS_JUGADOR, JSON.stringify(lista));
+  } catch (err) {
+    console.warn('No se han podido guardar las ligas.', err);
+  }
+}
+
+// Id de la liga activa, solo si sigue estando en la lista guardada.
+function leerLigaActiva(lista) {
+  try {
+    const id = localStorage.getItem(CLAVE_ACTIVA_JUGADOR);
+    return lista.some((liga) => liga.id === id) ? id : null;
+  } catch (err) {
+    console.warn('No se ha podido leer la liga activa.', err);
+    return null;
+  }
+}
+
+function guardarLigaActiva(id) {
+  try {
+    if (id) localStorage.setItem(CLAVE_ACTIVA_JUGADOR, id);
+    else localStorage.removeItem(CLAVE_ACTIVA_JUGADOR);
+  } catch (err) {
+    console.warn('No se ha podido guardar la liga activa.', err);
+  }
+}
+
+// Si la URL trae un `?liga=` válido, lo guarda y lo marca activo.
+function registrarLigaDeEnlace() {
+  const id = leerIdLigaDeUrl(window.location.search);
+  if (!id) return;
+  guardarLigasGuardadas(anadirLiga(leerLigasGuardadas(), id));
+  guardarLigaActiva(id);
+}
+
+/* ---------- Pantalla ---------- */
 
 // Mensajes de la página de jugador. No hay modales de aviso en esta página:
 // se escribe en un párrafo fijo bajo la cabecera, siempre con textContent.
@@ -52,50 +151,112 @@ function mostrarFechaPublicacion(publicadoEl) {
   linea.hidden = false;
 }
 
-// Descarga la liga publicada por el admin y la pinta. `cache: 'no-store'`
+function ocultarFechaPublicacion() {
+  const linea = document.getElementById('actualizado-jugador');
+  if (linea) linea.hidden = true;
+}
+
+// Pinta el selector de ligas; solo se ve con 2 o más ligas guardadas. Con
+// `idSeleccionado` null queda sin opción marcada (la activa se acaba de retirar).
+function pintarSelectorLigas(lista, idSeleccionado) {
+  const selector = document.getElementById('selector-liga-jugador');
+  if (!selector) return;
+  selector.hidden = lista.length < 2;
+  selector.replaceChildren(
+    ...lista.map((liga) => {
+      const opcion = document.createElement('option');
+      opcion.value = liga.id;
+      opcion.textContent = liga.nombre;
+      return opcion;
+    })
+  );
+  const indice = lista.findIndex((liga) => liga.id === idSeleccionado);
+  selector.selectedIndex = indice;
+}
+
+// Una liga que el admin ha retirado: se quita de la lista y se vacía la
+// pantalla. Si quedan otras, la primera pasa a ser la activa y se descarga en
+// el acto (así el jugador nunca se queda en blanco); el aviso se escribe
+// DESPUÉS de esa carga porque una carga correcta borra el mensaje. No hay
+// recursión sin fin: cada vuelta quita una liga de la lista.
+async function gestionarLigaRetirada(id) {
+  const lista = leerLigasGuardadas();
+  const retirada = lista.find((liga) => liga.id === id);
+  const restantes = quitarLiga(lista, id);
+  guardarLigasGuardadas(restantes);
+  guardarLigaActiva(restantes.length ? restantes[0].id : null);
+  ligaState = estadoInicial();
+  render();
+  ocultarFechaPublicacion();
+  pintarSelectorLigas(restantes, null);
+
+  const aviso = `La liga «${retirada ? retirada.nombre : id}» ya no está publicada.`;
+  if (restantes.length) {
+    // Si la carga siguiente falló, manda su mensaje (sin red, otra liga retirada…).
+    if (await cargarLigaOficial()) mostrarMensajeJugador(aviso);
+  } else {
+    mostrarMensajeJugador(`${aviso} Pulsa Actualizar para ver la liga principal.`);
+  }
+}
+
+// Guarda el nombre real de la liga (el del JSON) en la lista del jugador.
+function recordarNombreLiga(id, nombre) {
+  if (!id) return;
+  guardarLigasGuardadas(renombrarLiga(leerLigasGuardadas(), id, nombre));
+}
+
+// Descarga la liga activa (o la principal) y la pinta. `cache: 'no-store'`
 // para que el navegador no sirva una versión vieja de su propia caché HTTP;
 // del respaldo offline se encarga el service worker (red primero con
 // fallback a la copia cacheada), así que un fallo de red aquí significa que
-// no hay red Y no hay copia guardada.
+// no hay red Y no hay copia guardada. Devuelve true si la liga se pintó.
 async function cargarLigaOficial() {
+  const lista = leerLigasGuardadas();
+  const idActiva = leerLigaActiva(lista);
   let respuesta;
   try {
-    respuesta = await fetch(ARCHIVO_LIGA_OFICIAL, { cache: 'no-store' });
+    respuesta = await fetch(rutaDescargaLiga(idActiva), { cache: 'no-store' });
   } catch (err) {
     console.warn('No se ha podido descargar la liga publicada.', err);
     mostrarMensajeJugador('Sin conexión. Vuelve a intentarlo con internet.');
-    return;
+    return false;
   }
 
   if (respuesta.status === 404) {
-    mostrarMensajeJugador('El administrador aún no ha publicado la liga.');
-    return;
+    if (idActiva) await gestionarLigaRetirada(idActiva);
+    else mostrarMensajeJugador('El administrador aún no ha publicado la liga.');
+    return false;
   }
 
   let estado;
   try {
     if (!respuesta.ok) throw new Error(`respuesta ${respuesta.status}`);
     estado = await respuesta.json();
-    // formaValidaLiga solo exige girls/boys/jornadas: el campo extra
-    // `publicadoEl` que añade la publicación pasa sin problema.
+    // formaValidaLiga solo exige girls/boys/jornadas: los campos extra que
+    // añade la publicación (`publicadoEl`, `ligaId`, `nombre`) pasan sin problema.
     if (!formaValidaLiga(estado)) throw new Error('forma invalida');
   } catch (err) {
     console.warn('La liga publicada no se ha podido leer.', err);
     mostrarMensajeJugador('La liga publicada no se ha podido leer.');
-    return;
+    return false;
   }
 
+  recordarNombreLiga(idActiva, estado.nombre);
+  pintarSelectorLigas(leerLigasGuardadas(), idActiva);
   ligaState = normalizarLiga(estado);
   ocultarMensajeJugador();
   mostrarFechaPublicacion(estado.publicadoEl);
   render();
+  return true;
 }
 
-// Arranque de `jugador.html`: solo lectura desde el primer instante y la
-// liga viene de `liga-oficial.json`, no de localStorage.
+// Arranque de `jugador/index.html`: solo lectura desde el primer instante;
+// la liga viene de `ligas/<id>.json` o de `liga-oficial.json`, no del
+// localStorage del admin.
 function initJugador() {
   modoConsulta = true;
 
+  registrarLigaDeEnlace();
   registrarListenersComunes();
   registrarListenersJugador();
   registrarServiceWorker();
@@ -103,11 +264,10 @@ function initJugador() {
   cargarLigaOficial();
 }
 
-// Botón "Actualizar" de jugador.html, junto a la línea "Actualizado: …":
-// fuerza una nueva descarga de liga-oficial.json sin recargar la página.
-// cargarLigaOficial() ya gestiona los mensajes de error y repinta la fecha;
-// aquí solo se cuida el estado visual del botón, siempre restaurado al
-// terminar (éxito o error) con try/finally.
+// Botón "Actualizar" (recarga la liga activa sin recargar la página) y
+// selector de liga. cargarLigaOficial() ya gestiona mensajes de error y
+// fecha; aquí solo se cuida el estado visual del botón, restaurado siempre
+// al terminar con try/finally.
 function registrarListenersJugador() {
   const btnActualizar = document.getElementById('btn-actualizar-jugador');
   const textoOriginal = btnActualizar.textContent;
@@ -121,4 +281,23 @@ function registrarListenersJugador() {
       btnActualizar.textContent = textoOriginal;
     }
   });
+
+  const selector = document.getElementById('selector-liga-jugador');
+  selector.addEventListener('change', () => {
+    guardarLigaActiva(selector.value);
+    cargarLigaOficial();
+  });
+}
+
+// Exportación para los tests de Node; en el navegador `module` no existe.
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    esIdLigaValido,
+    leerIdLigaDeUrl,
+    anadirLiga,
+    renombrarLiga,
+    quitarLiga,
+    sanearListaLigas,
+    rutaDescargaLiga,
+  };
 }

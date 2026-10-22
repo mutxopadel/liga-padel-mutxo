@@ -4,7 +4,7 @@
 // IMPORTANTE: al desplegar cambios en index.html/app.js/style.css/etc,
 // subir la versión de CACHE de abajo para que el navegador descarte la
 // caché vieja y sirva los ficheros nuevos.
-const CACHE = 'liga-mutxo-v9';
+const CACHE = 'liga-mutxo-v10';
 
 const ARCHIVOS = [
   '.',
@@ -23,10 +23,12 @@ const ARCHIVOS = [
   'icons/icon-512.png',
 ];
 
-// La liga publicada NO va en ARCHIVOS: puede no existir todavía (el precache
-// entero fallaría) y además cambia cada vez que el admin publica. Se cachea
-// en tiempo de ejecución con estrategia de red primero (ver el fetch).
+// Las ligas publicadas (principal y `ligas/<id>.json`) NO van en ARCHIVOS:
+// pueden no existir todavía (el precache entero fallaría) y además cambian
+// cada vez que el admin publica. Se cachean en tiempo de ejecución con
+// estrategia de red primero (ver el fetch).
 const LIGA_OFICIAL = 'liga-oficial.json';
+const PATRON_LIGA_PUBLICADA = /\/ligas\/[a-z0-9-]+\.json$/;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -61,7 +63,9 @@ self.addEventListener('fetch', (event) => {
   // y de paso se refresca la copia cacheada; si no la hay, se sirve esa copia
   // para que la app de jugador siga abriendo con los últimos resultados
   // vistos. Sin copia y sin red, se deja fallar (la página lo cuenta).
-  if (url.pathname.endsWith(LIGA_OFICIAL)) {
+  const esLigaPublicada =
+    url.pathname.endsWith(LIGA_OFICIAL) || PATRON_LIGA_PUBLICADA.test(url.pathname);
+  if (esLigaPublicada) {
     event.respondWith(
       fetch(request)
         .then((respuesta) => {

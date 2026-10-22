@@ -57,6 +57,7 @@
     <section id="tab-jornadas" class="tab-section">
       <div class="acciones-jornadas">
         <button id="btn-publicar" class="btn btn-secondary">Publicar resultados</button>
+        <button id="btn-retirar" class="btn btn-secondary">Retirar publicación</button>
       </div>
       <div id="jornadas-container"></div>
       <p id="jornadas-vacio" class="mensaje-vacio">Aún no se ha generado ninguna liga. Ve a la pestaña "Jugadores" y pulsa "Generar Liga".</p>
@@ -126,6 +127,28 @@
       </div>
       <div class="modal-acciones">
         <button id="modal-compartir-cancelar" class="btn btn-secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-publicar-overlay" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-publicar-mensaje">
+      <p id="modal-publicar-mensaje"></p>
+      <p><label><input type="checkbox" id="modal-publicar-principal"> Publicar también como liga principal (la que ven los jugadores sin enlace)</label></p>
+      <div class="modal-acciones">
+        <button id="modal-publicar-cancelar" class="btn btn-secondary">Cancelar</button>
+        <button id="modal-publicar-confirmar" class="btn btn-primary">Publicar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-publicado-overlay" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-publicado-mensaje">
+      <p id="modal-publicado-mensaje"></p>
+      <input type="text" id="modal-publicado-enlace" class="modal-texto-input" readonly aria-label="Enlace para los jugadores" />
+      <div class="modal-acciones">
+        <button id="modal-publicado-copiar" class="btn btn-secondary">Copiar enlace</button>
+        <button id="modal-publicado-cerrar" class="btn btn-primary">Cerrar</button>
       </div>
     </div>
   </div>

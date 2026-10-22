@@ -78,6 +78,19 @@ h2 { font-size: 1.25rem; margin-bottom: var(--space-2); }
   border-color: var(--secondary);
 }
 
+/* Selector de liga de la app de jugador (solo con 2+ ligas): ancho completo
+   bajo el título y objetivo táctil de 44 px. */
+.selector-liga-jugador {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  min-height: 44px;
+  margin-top: var(--space-1);
+  font-size: 1rem;
+}
+
+.selector-liga-jugador[hidden] { display: none; }
+
 .ligas-acciones {
   display: flex;
   flex-wrap: wrap;
