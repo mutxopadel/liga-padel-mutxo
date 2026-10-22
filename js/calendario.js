@@ -106,7 +106,7 @@ const INTENTOS_AGRUPAMIENTO = 500;
 // El presupuesto de refinamiento escala con n: grupos grandes tienen mucho
 // más espacio de combinaciones que cubrir, así que necesitan más pasadas
 // para acercarse a su techo de cobertura; grupos pequeños ya lo alcanzan
-// con pocas. Medido en la práctica (ver notas de la sesión): más allá de
+// con pocas. Medido en la práctica: más allá de
 // esto los rendimientos son marginales frente al coste en tiempo, y esto
 // mantiene la generación bien por debajo de 5s incluso con n=16.
 function pasadasRefinamiento(n) {

@@ -40,14 +40,18 @@ function estadoInicial() {
    enlace…) siguen funcionando sin enterarse de que hay varias ligas:
    cambiar de liga activa es reasignar `ligaState` y volver a renderizar.
 
-   El formato de UNA liga (el del export, el del enlace de la Fase 2 y el de
+   El formato de UNA liga (el del export, el del enlace compartido y el de
    los JSON antiguos) NO cambia: sigue siendo el objeto plano.
    ------------------------------------------------------------ */
 
+// Excepción a la norma «sin estado global mutable»: la app son scripts
+// clásicos sin módulos ni build, y todas las vistas leen la liga activa de
+// estas variables. Las escrituras a localStorage pasan solo por
+// guardarEstado().
 let appState = { ligas: [], activaId: null };
 let ligaState = estadoInicial();
 
-// Modo consulta (Fase 4, enlaces #ver=): cuando es true, `ligaState` apunta
+// Modo consulta (enlaces #ver=): cuando es true, `ligaState` apunta
 // al estado descomprimido del enlace, SIN relación alguna con `appState` (el
 // contenedor cargado de localStorage se queda exactamente como estaba). Es
 // la variable que activa todas las salvaguardas de solo lectura: bloquea
@@ -94,7 +98,7 @@ function appStateInicial() {
   return contenedor;
 }
 
-// Forma del contenedor multi-liga (lo que se guarda desde la Fase 3).
+// Forma del contenedor multi-liga (lo que se guarda desde que hay varias ligas).
 function formaValidaAppState(parsed) {
   return Boolean(parsed) && Array.isArray(parsed.ligas) && 'activaId' in parsed;
 }
@@ -146,7 +150,7 @@ function normalizarEntradas(ligas) {
 }
 
 // Migración interna y silenciosa: un valor guardado con la forma "plana" de
-// antes de la Fase 3 se envuelve como única liga ("Liga 1") y se reescribe
+// anterior al contenedor multi-liga se envuelve como única liga ("Liga 1") y se reescribe
 // ya envuelto. Sin pérdida de datos y sin preguntar nada al usuario.
 function cargarEstado() {
   const raw = localStorage.getItem(STORAGE_KEY);

@@ -7,7 +7,7 @@
 
 // Mínimo funcional, no arbitrario: con 1 sola pareja por grupo no hay nadie
 // contra quien jugar (generarCalendario produciría una liga con 0 partidos
-// reales — ver notas de la sesión). 2 es el mínimo que da al menos 1 partido.
+// reales). 2 es el mínimo que da al menos 1 partido.
 const MIN_PAREJAS = 2;
 
 function nombresCompletos() {

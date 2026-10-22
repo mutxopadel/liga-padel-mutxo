@@ -56,7 +56,7 @@ function registrarListenersComunes() {
     capturarImagen(document.getElementById('clasificacion-capturable'), `clasificacion-padel-mutxo-${fecha}`);
   });
 
-  // Ficha de jugador (Fase 5): botón "Cerrar" y clic fuera del cuadro (el
+  // Ficha de jugador: botón "Cerrar" y clic fuera del cuadro (el
   // resto de modales de la app no cierra con clic fuera; se añade solo aquí).
   document.getElementById('modal-ficha-cerrar').addEventListener('click', cerrarFichaJugador);
   document.getElementById('modal-ficha-overlay').addEventListener('click', (e) => {
@@ -91,9 +91,9 @@ function registrarListenersAdmin() {
   });
 }
 
-// PWA (Fase 6): solo se registra el service worker cuando la app se sirve
+// PWA: solo se registra el service worker cuando la app se sirve
 // por https o localhost. Por file:// (doble clic) no se registra nada y
-// todo sigue funcionando exactamente igual que antes.
+// todo sigue funcionando igual que sin service worker.
 function registrarServiceWorker() {
   const protocoloValido = location.protocol === 'https:' ||
     location.hostname === 'localhost' || location.hostname === '127.0.0.1';

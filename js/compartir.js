@@ -60,10 +60,10 @@ function soportaCompressionStream() {
   return typeof CompressionStream !== 'undefined' && typeof DecompressionStream !== 'undefined';
 }
 
-// Compartir enlace (Fase 4): tras las comprobaciones de siempre (file://,
+// Compartir enlace: tras las comprobaciones de siempre (file://,
 // soporte de CompressionStream), en vez de generar directamente el enlace
 // editable se abre un modal para elegir entre "solo lectura" (#ver=) y
-// "copia completa editable" (#liga=, igual que la Fase 2). Ambos usan
+// "copia completa editable" (#liga=). Ambos usan
 // exactamente el mismo payload comprimido — solo cambia el prefijo del hash.
 async function compartirEnlace() {
   if (location.protocol === 'file:') {
@@ -140,7 +140,7 @@ async function copiarEnlaceGenerado(prefijo, datosBase64) {
 
 // Al cargar la página con un hash "#liga=..." o "#ver=...": descomprime y
 // valida con la MISMA validación de forma que importarJSON. "#liga=" sigue
-// funcionando exactamente igual que en la Fase 2/3 (importa como liga nueva
+// funcionando como siempre (importa como liga nueva
 // tras confirmación). "#ver=" entra en modo consulta (ver manejarHashVer).
 async function manejarHashCompartido() {
   const hash = location.hash;
@@ -204,7 +204,7 @@ function activarModoConsulta() {
   document.querySelector('.tab-btn[data-tab="jugadores"]').hidden = true;
   document.getElementById('ligas-barra').hidden = true;
   // Pestaña Jugadores oculta, pero Jornadas sí se ve en consulta — y ahí
-  // vive ahora #btn-publicar (Remate). ?. porque jugador.html no tiene esta
+  // vive #btn-publicar. ?. porque jugador.html no tiene esta
   // fila (misma función no se llama ahí, pero por si el selector cambia).
   document.querySelector('.acciones-jornadas')?.setAttribute('hidden', '');
   activarTab('jornadas');

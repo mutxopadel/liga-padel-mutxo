@@ -293,7 +293,7 @@ async function ejecutarRetirada(entrada) {
   mostrarAviso(`Publicación de «${entrada.nombre}» retirada: su enlace dejará de funcionar en ~1 min.`);
 }
 
-// app.js ya engancha #btn-publicar; aquí van los controles propios de la
+// arranque.js ya engancha #btn-publicar; aquí van los controles propios de la
 // publicación, que solo existen en index.html (el script va al final del body).
 function registrarListenersPublicacion() {
   botonRetirar().addEventListener('click', retirarPublicacion);

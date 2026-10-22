@@ -2,7 +2,7 @@
 // Ficha de jugador: cálculo de sus datos y su modal.
 
 /* ============================================================
-   FICHA DE JUGADOR (Fase 5)
+   FICHA DE JUGADOR
 
    Modal de solo consulta con el detalle de un jugador: resumen (mismos
    números que la tabla, reutilizando calcularClasificacion/
@@ -242,6 +242,7 @@ function construirEvolucionFicha(personId) {
 
 // Id de la persona cuya ficha está abierta ahora mismo (para el botón "Sacar
 // imagen"). null cuando el modal está cerrado.
+// Estado global mutable aceptado (misma excepción que estado.js): scripts clásicos sin módulos.
 let fichaAbiertaPersonId = null;
 
 function abrirFichaJugador(personId) {

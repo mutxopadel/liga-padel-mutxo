@@ -1,10 +1,10 @@
 // Service worker de Liga Mutxo Padel: cache-first con lista explícita de
 // estáticos para poder abrir la app offline tras la primera visita.
 //
-// IMPORTANTE: al desplegar cambios en index.html/app.js/style.css/etc,
-// subir la versión de CACHE de abajo para que el navegador descarte la
-// caché vieja y sirva los ficheros nuevos.
-const CACHE = 'liga-mutxo-v14';
+// IMPORTANTE: al desplegar cambios en los ficheros de la app, subir la
+// versión de CACHE de abajo para que el navegador descarte la caché vieja y
+// sirva los ficheros nuevos.
+const CACHE = 'liga-mutxo-v15';
 
 const ARCHIVOS = [
   '.',
@@ -13,7 +13,10 @@ const ARCHIVOS = [
   'jugador/',
   'jugador/index.html',
   'jugador/manifest.json',
-  'style.css',
+  'css/tokens.css',
+  'css/base.css',
+  'css/componentes.css',
+  'css/modales.css',
   'js/estado.js',
   'js/calendario.js',
   'js/equidad.js',

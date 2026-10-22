@@ -1,0 +1,22 @@
+:root {
+  --bg: #0a0e1a;
+  --surface: #11172a;
+  --surface-elevada: #161d36;
+  --primary: #e8973a;
+  --secondary: #7ec8e3;
+  --text: #f5f7fa;
+  --muted: #8b93a7;
+  --destructive: #e35d5d;
+  --success: #5cc28a;
+  /* Contorno de foco de teclado: mismo azul que --secondary (≈10:1 sobre --bg). */
+  --focus: #7ec8e3;
+
+  --radius-card: 12px;
+  --radius-input: 8px;
+  --radius-pill: 9999px;
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
+}

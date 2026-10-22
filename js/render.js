@@ -253,7 +253,7 @@ function renderClasificacion() {
       const td = document.createElement('td');
       if (col === 8) td.className = 'col-puntos';
       if (col === 1) {
-        // Fase 5: el nombre es un <button> real (accesible por teclado sin
+        // El nombre es un <button> real (accesible por teclado sin
         // roles/tabindex extra) que abre la ficha de ese jugador. Funciona
         // igual en modo consulta: la ficha es pura consulta, no toca estado.
         const btnNombre = document.createElement('button');
