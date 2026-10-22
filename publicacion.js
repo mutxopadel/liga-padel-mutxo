@@ -44,9 +44,11 @@ function enlaceJugador(urlBase, id) {
   return `${urlBase}jugador/?liga=${id}`;
 }
 
-/** Contenido que se sube: el estado de la liga más fecha, id y nombre. */
+/** Contenido que se sube: el estado de la liga más fecha, id, nombre y creación. */
 function construirContenidoPublicado(estadoLiga, entrada, publicadoEl) {
-  return { ...estadoLiga, publicadoEl, ligaId: entrada.id, nombre: entrada.nombre };
+  return {
+    ...estadoLiga, publicadoEl, ligaId: entrada.id, nombre: entrada.nombre, creadaEl: entrada.creadaEl,
+  };
 }
 
 /** ¿El `liga-oficial.json` remoto corresponde a la liga con este id? */

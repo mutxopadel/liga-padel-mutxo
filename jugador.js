@@ -37,15 +37,34 @@ function leerIdLigaDeUrl(busqueda) {
 
 // Añade la liga a la lista sin duplicar; si ya estaba, se respeta el nombre
 // guardado (el real, descargado antes). Devuelve una lista nueva.
-function anadirLiga(lista, id, nombre) {
+function anadirLiga(lista, id, nombre, creadaEl) {
   if (lista.some((liga) => liga.id === id)) return lista.slice();
-  return [...lista, { id, nombre: nombre || id }];
+  const liga = { id, nombre: nombre || id };
+  if (typeof creadaEl === 'string') liga.creadaEl = creadaEl;
+  return [...lista, liga];
 }
 
 // Devuelve una lista nueva con el nombre actualizado (si el nombre es útil).
 function renombrarLiga(lista, id, nombre) {
   if (typeof nombre !== 'string' || !nombre.trim()) return lista.slice();
-  return lista.map((liga) => (liga.id === id ? { id, nombre: nombre.trim() } : liga));
+  return lista.map((liga) => (liga.id === id ? { ...liga, nombre: nombre.trim() } : liga));
+}
+
+// Devuelve una lista nueva con la fecha de creación de la liga (si es string).
+function fecharLiga(lista, id, creadaEl) {
+  if (typeof creadaEl !== 'string') return lista.slice();
+  return lista.map((liga) => (liga.id === id ? { ...liga, creadaEl } : liga));
+}
+
+// Orden del selector: la liga más antigua arriba, como en la app de gestión.
+// Las que no tienen `creadaEl` van primero: se publicaron antes de que
+// existiera ese campo, así que son más antiguas que cualquiera con fecha. Se
+// mantiene su orden actual (Array.sort es estable). Devuelve una lista nueva.
+function ordenarLigas(lista) {
+  const sinFecha = lista.filter((liga) => typeof liga.creadaEl !== 'string');
+  const conFecha = lista.filter((liga) => typeof liga.creadaEl === 'string')
+    .sort((a, b) => (a.creadaEl < b.creadaEl ? -1 : a.creadaEl > b.creadaEl ? 1 : 0));
+  return [...sinFecha, ...conFecha];
 }
 
 // Devuelve una lista nueva sin la liga indicada.
@@ -60,7 +79,7 @@ function sanearListaLigas(bruta) {
   return bruta.reduce((lista, entrada) => {
     if (!entrada || !esIdLigaValido(entrada.id)) return lista;
     const nombre = typeof entrada.nombre === 'string' ? entrada.nombre : entrada.id;
-    return anadirLiga(lista, entrada.id, nombre);
+    return anadirLiga(lista, entrada.id, nombre, entrada.creadaEl);
   }, []);
 }
 
@@ -168,7 +187,8 @@ function ocultarFechaPublicacion() {
 
 // Pinta el selector de ligas; solo se ve con 2 o más ligas guardadas. Con
 // `idSeleccionado` null queda sin opción marcada (la activa se acaba de retirar).
-function pintarSelectorLigas(lista, idSeleccionado) {
+function pintarSelectorLigas(listaGuardada, idSeleccionado) {
+  const lista = ordenarLigas(listaGuardada);
   const selector = document.getElementById('selector-liga-jugador');
   if (!selector) return;
   selector.hidden = lista.length < 2;
@@ -194,7 +214,7 @@ async function gestionarLigaRetirada(id) {
   const retirada = lista.find((liga) => liga.id === id);
   const restantes = quitarLiga(lista, id);
   guardarLigasGuardadas(restantes);
-  guardarLigaActiva(restantes.length ? restantes[0].id : null);
+  guardarLigaActiva(restantes.length ? ordenarLigas(restantes)[0].id : null);
   ligaState = estadoInicial();
   render();
   ocultarFechaPublicacion();
@@ -209,10 +229,12 @@ async function gestionarLigaRetirada(id) {
   }
 }
 
-// Guarda el nombre real de la liga (el del JSON) en la lista del jugador.
-function recordarNombreLiga(id, nombre) {
+// Guarda el nombre real y la fecha de creación de la liga (los del JSON) en la
+// lista del jugador.
+function recordarDatosLiga(id, estado) {
   if (!id) return;
-  guardarLigasGuardadas(renombrarLiga(leerLigasGuardadas(), id, nombre));
+  const lista = renombrarLiga(leerLigasGuardadas(), id, estado.nombre);
+  guardarLigasGuardadas(fecharLiga(lista, id, estado.creadaEl));
 }
 
 // Descarga la liga activa (o la principal) y la pinta. `cache: 'no-store'`
@@ -251,7 +273,7 @@ async function cargarLigaOficial() {
     return false;
   }
 
-  recordarNombreLiga(idActiva, estado.nombre);
+  recordarDatosLiga(idActiva, estado);
   pintarSelectorLigas(leerLigasGuardadas(), idActiva);
   ligaState = normalizarLiga(estado);
   ocultarMensajeJugador();
@@ -318,6 +340,8 @@ if (typeof module !== 'undefined' && module.exports) {
     leerIdLigaDeUrl,
     anadirLiga,
     renombrarLiga,
+    fecharLiga,
+    ordenarLigas,
     quitarLiga,
     sanearListaLigas,
     rutaDescargaLiga,

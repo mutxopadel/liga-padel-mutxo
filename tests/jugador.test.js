@@ -8,6 +8,8 @@ const {
   leerIdLigaDeUrl,
   anadirLiga,
   renombrarLiga,
+  fecharLiga,
+  ordenarLigas,
   quitarLiga,
   sanearListaLigas,
   rutaDescargaLiga,
@@ -92,4 +94,38 @@ test('rutaDescargaLiga: liga activa o principal', () => {
   assert.strictEqual(rutaDescargaLiga('aaa111'), '../ligas/aaa111.json');
   assert.strictEqual(rutaDescargaLiga(null), '../liga-oficial.json');
   assert.strictEqual(rutaDescargaLiga('../x'), '../liga-oficial.json');
+});
+
+test('sanearListaLigas conserva creadaEl solo si es string', () => {
+  const bruta = [
+    { id: 'aaa', nombre: 'A', creadaEl: '2026-10-20T00:00:00.000Z' },
+    { id: 'bbb', nombre: 'B', creadaEl: 5 },
+  ];
+  assert.deepStrictEqual(sanearListaLigas(bruta), [
+    { id: 'aaa', nombre: 'A', creadaEl: '2026-10-20T00:00:00.000Z' },
+    { id: 'bbb', nombre: 'B' },
+  ]);
+});
+
+test('fecharLiga y renombrarLiga conservan los demás campos', () => {
+  const lista = [{ id: 'aaa', nombre: 'A' }];
+  const fechada = fecharLiga(lista, 'aaa', '2026-10-20');
+  assert.deepStrictEqual(fechada, [{ id: 'aaa', nombre: 'A', creadaEl: '2026-10-20' }]);
+  assert.deepStrictEqual(renombrarLiga(fechada, 'aaa', 'Nueva'),
+    [{ id: 'aaa', nombre: 'Nueva', creadaEl: '2026-10-20' }]);
+  assert.deepStrictEqual(fecharLiga(lista, 'aaa', undefined), lista);
+});
+
+test('ordenarLigas: sin fecha primero, luego ascendente, estable y sin mutar', () => {
+  const lista = [
+    { id: 'a', nombre: 'A', creadaEl: '2026-10-20' },
+    { id: 's1', nombre: 'S1' },
+    { id: 'b', nombre: 'B', creadaEl: '2026-10-10' },
+    { id: 's2', nombre: 'S2' },
+    { id: 'c', nombre: 'C', creadaEl: '2026-10-10' },
+  ];
+  const copia = JSON.parse(JSON.stringify(lista));
+  const ids = ordenarLigas(lista).map((liga) => liga.id);
+  assert.deepStrictEqual(ids, ['s1', 's2', 'b', 'c', 'a']);
+  assert.deepStrictEqual(lista, copia);
 });

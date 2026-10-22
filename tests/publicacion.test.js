@@ -45,9 +45,9 @@ test('enlaceJugador apunta a jugador/?liga=<id>', () => {
   assert.equal(enlaceJugador(URL_BASE, 'abc123'), `${URL_BASE}jugador/?liga=abc123`);
 });
 
-test('construirContenidoPublicado añade fecha, id y nombre sin tocar el estado', () => {
+test('construirContenidoPublicado añade fecha, id, nombre y creación sin tocar el estado', () => {
   const estado = { girls: ['Ana'], boys: ['Luis'], jornadas: [], liveGenerated: true };
-  const entrada = { id: 'abc123', nombre: 'Liga Otoño', liga: estado };
+  const entrada = { id: 'abc123', nombre: 'Liga Otoño', creadaEl: '2026-10-10T09:00:00.000Z', liga: estado };
   const contenido = construirContenidoPublicado(estado, entrada, '2026-10-22T10:00:00.000Z');
   assert.deepEqual(contenido, {
     girls: ['Ana'],
@@ -57,6 +57,7 @@ test('construirContenidoPublicado añade fecha, id y nombre sin tocar el estado'
     publicadoEl: '2026-10-22T10:00:00.000Z',
     ligaId: 'abc123',
     nombre: 'Liga Otoño',
+    creadaEl: '2026-10-10T09:00:00.000Z',
   });
   assert.equal('ligaId' in estado, false);
 });
