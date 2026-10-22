@@ -4,7 +4,7 @@
 // IMPORTANTE: al desplegar cambios en index.html/app.js/style.css/etc,
 // subir la versión de CACHE de abajo para que el navegador descarte la
 // caché vieja y sirva los ficheros nuevos.
-const CACHE = 'liga-mutxo-v8';
+const CACHE = 'liga-mutxo-v9';
 
 const ARCHIVOS = [
   '.',
@@ -15,6 +15,8 @@ const ARCHIVOS = [
   'jugador/manifest.json',
   'style.css',
   'app.js',
+  'publicacion.js',
+  'jugador.js',
   'vendor/html2canvas.min.js',
   'manifest.json',
   'icons/icon-192.png',
