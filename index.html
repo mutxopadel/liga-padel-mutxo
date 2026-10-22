@@ -145,10 +145,19 @@
   <div id="modal-publicado-overlay" class="modal-overlay" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-publicado-mensaje">
       <p id="modal-publicado-mensaje"></p>
-      <input type="text" id="modal-publicado-enlace" class="modal-texto-input" readonly aria-label="Enlace para los jugadores" />
+      <p id="modal-publicado-enlace" class="modal-enlace" aria-label="Enlace para los jugadores"></p>
       <div class="modal-acciones">
         <button id="modal-publicado-copiar" class="btn btn-secondary">Copiar enlace</button>
         <button id="modal-publicado-cerrar" class="btn btn-primary">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-aviso-overlay" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-aviso-mensaje">
+      <p id="modal-aviso-mensaje"></p>
+      <div class="modal-acciones">
+        <button id="modal-aviso-cerrar" class="btn btn-primary">Entendido</button>
       </div>
     </div>
   </div>

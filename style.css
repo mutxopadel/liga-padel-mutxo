@@ -599,6 +599,18 @@ h2 { font-size: 1.25rem; margin-bottom: var(--space-2); }
   border-color: var(--secondary);
 }
 
+/* Enlace publicado: texto (no input) para que parta línea y se vea entero. */
+.modal-enlace {
+  margin-top: var(--space-2);
+  background: var(--surface-elevada);
+  border-radius: var(--radius-input);
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
 /* Modal de elección de tipo de enlace (Fase 4): reutiliza .modal-overlay/
    .modal, así que ya hereda el par .modal-overlay[hidden] de arriba. */
 .modal-compartir-opciones {

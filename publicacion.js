@@ -132,6 +132,14 @@ function describirErrorGitHub(err) {
   return err.message;
 }
 
+// Aviso solo informativo (un botón «Entendido»). mostrarModal pide confirmar
+// con Cancelar + Continuar en rojo, que confunde cuando no hay nada que decidir.
+function mostrarAviso(mensaje) {
+  document.getElementById('modal-aviso-mensaje').textContent = mensaje;
+  document.getElementById('modal-aviso-overlay').hidden = false;
+  document.getElementById('modal-aviso-cerrar').focus();
+}
+
 const botonPublicar = () => document.getElementById('btn-publicar');
 const botonRetirar = () => document.getElementById('btn-retirar');
 
@@ -150,7 +158,7 @@ async function conOperacionEnCurso(boton, textoOcupado, accion, tarea) {
     await tarea();
   } catch (err) {
     console.error(`Error al ${accion}`, err);
-    mostrarModal(`No se ha podido ${accion}: ${describirErrorGitHub(err)}.`, () => {});
+    mostrarAviso(`No se ha podido ${accion}: ${describirErrorGitHub(err)}.`);
   } finally {
     botones.forEach((b) => { b.disabled = false; });
     boton.textContent = textoOriginal;
@@ -225,19 +233,25 @@ async function ejecutarPublicacion(principal) {
 
 function mostrarPublicado(mensaje, enlace) {
   document.getElementById('modal-publicado-mensaje').textContent = mensaje;
-  document.getElementById('modal-publicado-enlace').value = enlace;
+  document.getElementById('modal-publicado-enlace').textContent = enlace;
   document.getElementById('modal-publicado-copiar').textContent = 'Copiar enlace';
   document.getElementById('modal-publicado-overlay').hidden = false;
 }
 
-// Si el portapapeles no está disponible (http sin localhost, permiso
-// denegado) el enlace sigue a la vista y seleccionado para copiarlo a mano.
+// El enlace va en un texto (no un input) para que haga salto de línea y se vea
+// entero en móvil. Se selecciona con Range: si el portapapeles no está
+// disponible (http sin localhost, permiso denegado) queda marcado para
+// copiarlo a mano.
 async function copiarEnlacePublicado() {
-  const input = document.getElementById('modal-publicado-enlace');
+  const elemento = document.getElementById('modal-publicado-enlace');
   const boton = document.getElementById('modal-publicado-copiar');
-  input.select();
+  const rango = document.createRange();
+  rango.selectNodeContents(elemento);
+  const seleccion = window.getSelection();
+  seleccion.removeAllRanges();
+  seleccion.addRange(rango);
   try {
-    await navigator.clipboard.writeText(input.value);
+    await navigator.clipboard.writeText(elemento.textContent);
     boton.textContent = '¡Copiado!';
   } catch (err) {
     console.warn('No se ha podido copiar el enlace al portapapeles', err);
@@ -263,18 +277,18 @@ function confirmarRetirada() {
 async function ejecutarRetirada(entrada) {
   const oficial = await leerRutaGitHub(RUTA_LIGA_OFICIAL);
   if (esLigaPrincipal(oficial?.contenido, entrada.id)) {
-    mostrarModal(`«${entrada.nombre}» es la liga principal (la que ven los jugadores sin enlace), así que no se ` +
-      'puede retirar. Publica antes otra liga marcando «liga principal» y después retira esta.', () => {});
+    mostrarAviso(`«${entrada.nombre}» es la liga principal (la que ven los jugadores sin enlace), así que no se ` +
+      'puede retirar. Publica antes otra liga marcando «liga principal» y después retira esta.');
     return;
   }
   const ruta = rutaLigaPublicada(entrada.id);
   const publicada = await leerRutaGitHub(ruta);
   if (!publicada) {
-    mostrarModal('Esta liga no estaba publicada.', () => {});
+    mostrarAviso('Esta liga no estaba publicada.');
     return;
   }
   await borrarRutaGitHub(ruta, publicada.sha, `Retira «${entrada.nombre}»`);
-  mostrarModal(`Publicación de «${entrada.nombre}» retirada: su enlace dejará de funcionar en ~1 min.`, () => {});
+  mostrarAviso(`Publicación de «${entrada.nombre}» retirada: su enlace dejará de funcionar en ~1 min.`);
 }
 
 // app.js ya engancha #btn-publicar; aquí van los controles propios de la
@@ -287,6 +301,7 @@ function registrarListenersPublicacion() {
     .addEventListener('click', () => { document.getElementById(idOverlay).hidden = true; });
   cerrarAlPulsar('modal-publicar-cancelar', 'modal-publicar-overlay');
   cerrarAlPulsar('modal-publicado-cerrar', 'modal-publicado-overlay');
+  cerrarAlPulsar('modal-aviso-cerrar', 'modal-aviso-overlay');
 }
 
 if (typeof document !== 'undefined') registrarListenersPublicacion();

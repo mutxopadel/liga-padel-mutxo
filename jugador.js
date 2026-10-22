@@ -114,6 +114,16 @@ function registrarLigaDeEnlace() {
   if (!id) return;
   guardarLigasGuardadas(anadirLiga(leerLigasGuardadas(), id));
   guardarLigaActiva(id);
+  quitarLigaDeLaBarra();
+}
+
+// Una vez registrado, `?liga=` sobra en la barra: si se quedara, recargar
+// después de cambiar de liga con el selector devolvería a la del enlace.
+// replaceState conserva ruta y hash y no añade entrada al historial.
+function quitarLigaDeLaBarra() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete('liga');
+  window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
 }
 
 /* ---------- Pantalla ---------- */
@@ -264,6 +274,16 @@ function initJugador() {
   cargarLigaOficial();
 }
 
+// Al volver atrás el navegador puede restaurar la página desde su caché
+// (bfcache) con el selector y la liga que tenía antes de cambiar: se repinta
+// el selector y se recarga la activa desde el almacenamiento.
+function restaurarTrasVolver(evento) {
+  if (!evento.persisted) return;
+  const lista = leerLigasGuardadas();
+  pintarSelectorLigas(lista, leerLigaActiva(lista));
+  cargarLigaOficial();
+}
+
 // Botón "Actualizar" (recarga la liga activa sin recargar la página) y
 // selector de liga. cargarLigaOficial() ya gestiona mensajes de error y
 // fecha; aquí solo se cuida el estado visual del botón, restaurado siempre
@@ -287,6 +307,8 @@ function registrarListenersJugador() {
     guardarLigaActiva(selector.value);
     cargarLigaOficial();
   });
+
+  window.addEventListener('pageshow', restaurarTrasVolver);
 }
 
 // Exportación para los tests de Node; en el navegador `module` no existe.
